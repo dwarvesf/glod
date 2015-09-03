@@ -1,19 +1,17 @@
 package nhaccuatui
 
 import (
-"fmt"
-"net/http"
-"strings"
+	"strings"
 
-"github.com/PuerkitoBio/goquery"
-"github.com/astaxie/beego/httplib"
+	"github.com/PuerkitoBio/goquery"
+	"github.com/astaxie/beego/httplib"
 )
+
 const (
-	song string ="http://www.nhaccuatui.com/bai-hat/"
-	album string ="http://www.nhaccuatui.com/playlist/"
+	song             string = "http://www.nhaccuatui.com/bai-hat/"
+	album            string = "http://www.nhaccuatui.com/playlist/"
 	linkDownloadSong string = "http://www.nhaccuatui.com/download/song/"
 )
-
 
 type ResponseNhacCuaTui struct {
 	Data           ResponseData `json:"data"`
@@ -27,10 +25,9 @@ type ResponseData struct {
 	IsCharge  string `json:"is_charge"`
 }
 
-func GetDirectLink(link string)(string[],error) {
+func GetDirectLink(link string) ([]string, error) {
 	if link == "" {
-		panic("error")
-		return
+		return nil, nil
 	}
 
 	// implement
@@ -43,22 +40,17 @@ func GetDirectLink(link string)(string[],error) {
 		var res ResponseNhacCuaTui
 		err := req.ToJson(&res)
 		if err != nil {
-			panic(err)
-			return
+			return nil, err
 		}
-		listStream = append(listStream,res.Data.StreamUrl)
-		return listStream,nill
-		// c.Data["json"] = res.Data.StreamUrl
-		// c.ServeJson()
-		// return
+		listStream = append(listStream, res.Data.StreamUrl)
 	}
+
 	if strings.Contains(link, album) {
-		// urlList := strings.Split(link, ".")
-		
 		doc, err := goquery.NewDocument(link)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
+
 		doc.Find(".item_content").Each(func(i int, s *goquery.Selection) {
 			a, _ := s.Find("a").Attr("href")
 			urlList := strings.Split(a, ".")
@@ -66,13 +58,14 @@ func GetDirectLink(link string)(string[],error) {
 			req := httplib.Get(linkDownloadSong + urlList[3])
 
 			var res ResponseNhacCuaTui
-			err := req.ToJson(&res)
-			if err != nil {
-				panic(err)
-				return
-			}
+			req.ToJson(&res)
+			// if _err != nil {
+			// 	return nil, _err
+			// }
+
 			listStream = append(listStream, res.Data.StreamUrl)
-			})
-		return listStream,nill
+		})
 	}
+	return listStream, nil
+
 }
