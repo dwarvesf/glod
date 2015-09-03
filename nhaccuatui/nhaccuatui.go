@@ -7,6 +7,9 @@ import (
 	"github.com/astaxie/beego/httplib"
 )
 
+type NhacCuaTui struct {
+}
+
 const (
 	song             string = "http://www.nhaccuatui.com/bai-hat/"
 	album            string = "http://www.nhaccuatui.com/playlist/"
@@ -25,7 +28,7 @@ type ResponseData struct {
 	IsCharge  string `json:"is_charge"`
 }
 
-func GetDirectLink(link string) ([]string, error) {
+func (nct *NhacCuaTui) GetDirectLink(link string) ([]string, error) {
 	if link == "" {
 		return nil, nil
 	}
