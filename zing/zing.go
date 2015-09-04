@@ -24,8 +24,6 @@ func (z *Zing) GetDirectLink(link string) ([]string, error) {
 	if strings.Contains(link, song) {
 		urlList := strings.Split(link, "/")
 
-		//req := httplib.Get(linkDownloadSong + urlList[3])
-
 		linkDownload := linkDownloadSong + urlList[5]
 		// cut .html
 		substring := linkDownload[0 : len(linkDownload)-5]
