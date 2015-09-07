@@ -1,34 +1,51 @@
 package zing
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 
-	"github.com/ivkean/MDwn/engine"
-	"github.com/k0kubun/pp"
+	"github.com/PuerkitoBio/goquery"
 )
 
 const (
-	song  string = "http://v3.mp3.zing.vn/download/vip/song/"
-	album string = "http://mp3.zing.vn/album/"
+	song             string = "http://mp3.zing.vn/bai-hat/"
+	album            string = "http://mp3.zing.vn/album/"
+	linkDownloadSong string = "http://v3.mp3.zing.vn/download/vip/song/"
 )
 
-func GetDirectLink(songID string) (string, error) {
-	// get direct link
-	url := "http://v3.mp3.zing.vn/download/vip/song/" + songID
+type Zing struct {
+}
 
-	DirectLink, err := engine.Request(url, "GET")
-	if err != nil {
-		return "", err
+// function that input is a link then return an slice of url that permantly download file and error(if it has)
+func (z *Zing) GetDirectLink(link string) ([]string, error) {
+	if link == "" {
+		return nil, nil
+	}
+	var listStream []string
+	if strings.Contains(link, song) {
+		urlList := strings.Split(link, "/")
+		if len(urlList) < 6 {
+			return nil, errors.New("Invalid link")
+		}
+		linkDownload := linkDownloadSong + urlList[5]
+		// cut .html
+		substring := linkDownload[0 : len(linkDownload)-5]
+		fmt.Println(substring)
+		listStream = append(listStream, substring)
 	}
 
-	pp.Println(DirectLink)
-	url = strings.Replace(DirectLink.HttpResponse.Request.URL.String(), " ", "%20", -1)
-	// res, err := engine.Request(url, "GET")
-	// d1 := []byte(res.Body)
-	// err = ioutil.WriteFile(file, d1, 0644)
-	// if err != nil {
-	// 	return err
-	// }
+	if strings.Contains(link, album) {
+		doc, err := goquery.NewDocument(link)
+		if err != nil {
+			return nil, err
+		}
 
-	return url, nil
+		doc.Find(".fn-playlist-item").Each(func(i int, s *goquery.Selection) {
+			a, _ := s.Attr("data-id")
+			linkDownload := linkDownloadSong + a
+			listStream = append(listStream, linkDownload)
+		})
+	}
+	return listStream, nil
 }
