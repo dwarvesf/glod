@@ -1,8 +1,10 @@
 glod - download songs, videos(single or playlist) from sources: zing, nhaccuatui, youtube
 
-## Introduction: glod which is abbreviated of Gloddson a.k.a Glod Gloddson, one of those unconventional Dwarfs, who with Giamo Casanunda, Hwel the playwright, Mad, Sharn and Cheery Littlebottom, express rebellion against the limited life of a conventional Dwarf. Glod is a musician, a horn player, who comes to Ankh-Morpork apparently after some years' experience elsewhere, since he is first encountered applying for membership in the Musicians' Guild. In the office he meets Imp y Celyn and Lias Bluestone, two more newcomers. They join up to try to raise the Guild membership fees and form The Band With Rocks In.
+## Introduction:
+	glod which is abbreviated of Gloddson a.k.a Glod Gloddson, one of those unconventional Dwarfs, who with Giamo Casanunda, Hwel the playwright, Mad, Sharn and Cheery Littlebottom, express rebellion against the limited life of a conventional Dwarf. Glod is a musician, a horn player, who comes to Ankh-Morpork apparently after some years' experience elsewhere, since he is first encountered applying for membership in the Musicians' Guild. In the office he meets Imp y Celyn and Lias Bluestone, two more newcomers. They join up to try to raise the Guild membership fees and form The Band With Rocks In.
 
-## Installation: go get github.com/dwarvesf/glod
+## Installation:
+	go get github.com/dwarvesf/glod
 
 ## Usage:
  ```go 
