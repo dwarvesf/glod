@@ -29,6 +29,7 @@ type ResponseData struct {
 	IsCharge  string `json:"is_charge"`
 }
 
+// function that input is a link then return an slice of url that permantly download file and error(if it has)
 func (nct *NhacCuaTui) GetDirectLink(link string) ([]string, error) {
 	if link == "" {
 		return nil, nil
@@ -56,7 +57,7 @@ func (nct *NhacCuaTui) GetDirectLink(link string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-
+		// read all html, find class "item_content" then file tag a, get href infomation
 		doc.Find(".item_content").Each(func(i int, s *goquery.Selection) {
 			a, _ := s.Find("a").Attr("href")
 			urlList := strings.Split(a, ".")

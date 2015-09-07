@@ -17,6 +17,7 @@ const (
 type Zing struct {
 }
 
+// function that input is a link then return an slice of url that permantly download file and error(if it has)
 func (z *Zing) GetDirectLink(link string) ([]string, error) {
 	if link == "" {
 		return nil, nil
