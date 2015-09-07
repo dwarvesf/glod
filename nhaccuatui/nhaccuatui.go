@@ -61,9 +61,6 @@ func (nct *NhacCuaTui) GetDirectLink(link string) ([]string, error) {
 		doc.Find(".item_content").Each(func(i int, s *goquery.Selection) {
 			a, _ := s.Find("a").Attr("href")
 			urlList := strings.Split(a, ".")
-			if len(urlList) < 4 {
-				return nil, errors.New("Invalid link")
-			}
 			req := httplib.Get(linkDownloadSong + urlList[3])
 
 			var res ResponseNhacCuaTui
