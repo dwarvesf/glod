@@ -68,6 +68,7 @@ func (youtube *Youtube) GetDirectLink(link string) ([]string, error) {
 	if link == "" {
 		return nil, nil
 	}
+
 	if strings.Contains(link, album) {
 		var listLink []string
 		doc, err := goquery.NewDocument(link)
@@ -82,15 +83,17 @@ func (youtube *Youtube) GetDirectLink(link string) ([]string, error) {
 		for i := 0; i < len(listLink); i++ {
 			go DownloadSingleVideo(listLink[i])
 		}
-	} else {
-		urlList := strings.Split(link, "/")
-		if len(urlList) < 4 {
-			return nil, errors.New("Invalid link")
-		}
-		_videoId := urlList[3]
-		video_id := _videoId[8:len(_videoId)]
-		DownloadSingleVideo(video_id)
+		return nil, nil
 	}
+
+	urlList := strings.Split(link, "/")
+	if len(urlList) < 4 {
+		return nil, errors.New("Invalid link")
+	}
+
+	_videoId := urlList[3]
+	video_id := _videoId[8:len(_videoId)]
+	DownloadSingleVideo(video_id)
 
 	return nil, nil
 }
