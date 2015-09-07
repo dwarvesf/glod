@@ -90,7 +90,6 @@ func (youtube *Youtube) GetDirectLink(link string) ([]string, error) {
 	if len(urlList) < 4 {
 		return nil, errors.New("Invalid link")
 	}
-
 	_videoId := urlList[3]
 	video_id := _videoId[8:len(_videoId)]
 	DownloadSingleVideo(video_id)
