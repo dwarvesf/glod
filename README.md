@@ -25,9 +25,9 @@ glod - download songs, videos(single or playlist) from sources: zing, nhaccuatui
 	//in case url is song's link, listStream contains one item
  ```
 ## Contributing
-  * Fork it!*
-  * Create your feature branch(for example soundcloud): git checkout -b feature/soundcloud*
-  * Write your function download, remember to override GetDirectLink function*
-  * Commit your changes: git commit -am "Add function download for soundcloud"*
-  * Push to the branch: git push origin feature/soundcloud*
-  * Submit a pull request*
+  * Fork it!
+  * Create your feature branch(for example soundcloud): git checkout -b feature/soundcloud
+  * Write your function download, remember to override GetDirectLink function
+  * Commit your changes: git commit -am "Add function download for soundcloud"
+  * Push to the branch: git push origin feature/soundcloud
+  * Submit a pull request
