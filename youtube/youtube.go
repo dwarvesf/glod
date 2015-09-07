@@ -34,19 +34,7 @@ type Format struct {
 	Video_type, Quality, Url string
 }
 
-func Get(video_id string) (Video, error) {
-	query_string, err := fetchMeta(video_id)
-	if err != nil {
-		return Video{}, err
-	}
-	meta, err := parseMeta(video_id, query_string)
-
-	if err != nil {
-		return Video{}, err
-	}
-
-	return meta, nil
-}
+// function that download single video
 func DownloadSingleVideo(video_id string) ([]string, error) {
 	query_string, err := fetchMeta(video_id)
 	if err != nil {
@@ -75,10 +63,12 @@ func DownloadSingleVideo(video_id string) ([]string, error) {
 	return nil, nil
 }
 
+// function that receive input is a link and output doesnt matter(but it override GetDirectLink of Glod interface)
 func (youtube *Youtube) GetDirectLink(link string) ([]string, error) {
 	if link == "" {
 		return nil, nil
 	}
+
 	if strings.Contains(link, album) {
 		var listLink []string
 		doc, err := goquery.NewDocument(link)
@@ -93,19 +83,21 @@ func (youtube *Youtube) GetDirectLink(link string) ([]string, error) {
 		for i := 0; i < len(listLink); i++ {
 			go DownloadSingleVideo(listLink[i])
 		}
-	} else {
-		urlList := strings.Split(link, "/")
-		if len(urlList) < 4 {
-			return nil, errors.New("Invalid link")
-		}
-		_videoId := urlList[3]
-		video_id := _videoId[8:len(_videoId)]
-		DownloadSingleVideo(video_id)
+		return nil, nil
 	}
+
+	urlList := strings.Split(link, "/")
+	if len(urlList) < 4 {
+		return nil, errors.New("Invalid link")
+	}
+	_videoId := urlList[3]
+	video_id := _videoId[8:len(_videoId)]
+	DownloadSingleVideo(video_id)
 
 	return nil, nil
 }
 
+// return extension of video
 func (video *Video) GetExtension(index int) string {
 	for i := 0; i < len(FORMATS); i++ {
 		if strings.Contains(video.Formats[index].Video_type, FORMATS[i]) {
@@ -116,6 +108,7 @@ func (video *Video) GetExtension(index int) string {
 	return "avi"
 }
 
+// function readall body of request and return string body
 func fetchMeta(video_id string) (string, error) {
 	resp, err := http.Get(linkDownload + video_id)
 
@@ -129,6 +122,7 @@ func fetchMeta(video_id string) (string, error) {
 	return string(query_string), nil
 }
 
+//function parse string to Video struct
 func parseMeta(video_id, query_string string) (Video, error) {
 	u, _ := url.Parse("?" + query_string)
 
