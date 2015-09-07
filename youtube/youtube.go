@@ -2,7 +2,6 @@ package youtube
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -10,6 +9,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 type Youtube struct {
@@ -21,7 +22,10 @@ type Video struct {
 	Formats                                    []Format
 }
 
-const URL_META = "http://www.youtube.com/get_video_info?&video_id="
+const (
+	linkDownload        = "http://www.youtube.com/get_video_info?&video_id="
+	album        string = "playlist"
+)
 
 var FORMATS []string = []string{"3gp", "mp4", "flv", "webm", "avi"}
 
@@ -43,12 +47,7 @@ func Get(video_id string) (Video, error) {
 
 	return meta, nil
 }
-
-func (youtube *Youtube) GetDirectLink(link string) ([]string, error) {
-	urlList := strings.Split(link, "/")
-	_videoId := urlList[3]
-	video_id := _videoId[8:len(_videoId)]
-	fmt.Println(video_id)
+func DownloadSingleVideo(video_id string) ([]string, error) {
 	query_string, err := fetchMeta(video_id)
 	if err != nil {
 		return nil, err
@@ -73,6 +72,36 @@ func (youtube *Youtube) GetDirectLink(link string) ([]string, error) {
 		return nil, errors.New("Unable to download video content from Yotutube")
 	}
 	io.Copy(out, resp.Body)
+	return nil, nil
+}
+
+func (youtube *Youtube) GetDirectLink(link string) ([]string, error) {
+	if link == "" {
+		return nil, nil
+	}
+	if strings.Contains(link, album) {
+		var listLink []string
+		doc, err := goquery.NewDocument(link)
+		if err != nil {
+			return nil, err
+		}
+
+		doc.Find(".pl-video").Each(func(i int, s *goquery.Selection) {
+			a, _ := s.Attr("data-video-id")
+			listLink = append(listLink, a)
+		})
+		for i := 0; i < len(listLink); i++ {
+			go DownloadSingleVideo(listLink[i])
+		}
+	} else {
+		urlList := strings.Split(link, "/")
+		if len(urlList) < 4 {
+			return nil, errors.New("Invalid link")
+		}
+		_videoId := urlList[3]
+		video_id := _videoId[8:len(_videoId)]
+		DownloadSingleVideo(video_id)
+	}
 
 	return nil, nil
 }
@@ -88,7 +117,7 @@ func (video *Video) GetExtension(index int) string {
 }
 
 func fetchMeta(video_id string) (string, error) {
-	resp, err := http.Get(URL_META + video_id)
+	resp, err := http.Get(linkDownload + video_id)
 
 	if err != nil {
 		return "", err

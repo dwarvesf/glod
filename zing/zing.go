@@ -1,6 +1,7 @@
 package zing
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -23,7 +24,9 @@ func (z *Zing) GetDirectLink(link string) ([]string, error) {
 	var listStream []string
 	if strings.Contains(link, song) {
 		urlList := strings.Split(link, "/")
-
+		if len(urlList) < 6 {
+			return nil, errors.New("Invalid link")
+		}
 		linkDownload := linkDownloadSong + urlList[5]
 		// cut .html
 		substring := linkDownload[0 : len(linkDownload)-5]

@@ -1,6 +1,7 @@
 package nhaccuatui
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -37,7 +38,9 @@ func (nct *NhacCuaTui) GetDirectLink(link string) ([]string, error) {
 	var listStream []string
 	if strings.Contains(link, song) {
 		urlList := strings.Split(link, ".")
-
+		if len(urlList) < 4 {
+			return nil, errors.New("Invalid link")
+		}
 		req := httplib.Get(linkDownloadSong + urlList[3])
 
 		var res ResponseNhacCuaTui
@@ -57,15 +60,13 @@ func (nct *NhacCuaTui) GetDirectLink(link string) ([]string, error) {
 		doc.Find(".item_content").Each(func(i int, s *goquery.Selection) {
 			a, _ := s.Find("a").Attr("href")
 			urlList := strings.Split(a, ".")
-
+			if len(urlList) < 4 {
+				return nil, errors.New("Invalid link")
+			}
 			req := httplib.Get(linkDownloadSong + urlList[3])
 
 			var res ResponseNhacCuaTui
 			req.ToJson(&res)
-			// if _err != nil {
-			// 	return nil, _err
-			// }
-
 			listStream = append(listStream, res.Data.StreamUrl)
 		})
 	}
