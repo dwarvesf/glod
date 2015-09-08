@@ -6,6 +6,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/astaxie/beego/httplib"
+	"github.com/k0kubun/pp"
 )
 
 type NhacCuaTui struct {
@@ -32,7 +33,7 @@ type ResponseData struct {
 // function that input is a link then return an slice of url that permantly download file and error(if it has)
 func (nct *NhacCuaTui) GetDirectLink(link string) ([]string, error) {
 	if link == "" {
-		return nil, nil
+		return nil, errors.New("Empty Link")
 	}
 
 	// implement
@@ -40,7 +41,7 @@ func (nct *NhacCuaTui) GetDirectLink(link string) ([]string, error) {
 	if strings.Contains(link, song) {
 		urlList := strings.Split(link, ".")
 		if len(urlList) < 4 {
-			return nil, errors.New("Invalid link")
+			return nil, errors.New("Wrong Format Link")
 		}
 		req := httplib.Get(linkDownloadSong + urlList[3])
 
@@ -49,7 +50,11 @@ func (nct *NhacCuaTui) GetDirectLink(link string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
+		if res.Data.StreamUrl == "" {
+			return nil, errors.New("Invalid Link")
+		}
 		listStream = append(listStream, res.Data.StreamUrl)
+		return listStream, nil
 	}
 
 	if strings.Contains(link, album) {
@@ -67,7 +72,12 @@ func (nct *NhacCuaTui) GetDirectLink(link string) ([]string, error) {
 			req.ToJson(&res)
 			listStream = append(listStream, res.Data.StreamUrl)
 		})
+		pp.Println(listStream)
+		if len(listStream) == 0 {
+			return nil, errors.New("Invalid Link")
+		}
+		return listStream, nil
 	}
-	return listStream, nil
+	return listStream, errors.New("Unable to dowload this link")
 
 }

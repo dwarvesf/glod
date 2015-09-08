@@ -2,7 +2,6 @@ package zing
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -20,19 +19,19 @@ type Zing struct {
 // function that input is a link then return an slice of url that permantly download file and error(if it has)
 func (z *Zing) GetDirectLink(link string) ([]string, error) {
 	if link == "" {
-		return nil, nil
+		return nil, errors.New("Empty Link")
 	}
 	var listStream []string
 	if strings.Contains(link, song) {
 		urlList := strings.Split(link, "/")
 		if len(urlList) < 6 {
-			return nil, errors.New("Invalid link")
+			return nil, errors.New("Wrong Format link")
 		}
 		linkDownload := linkDownloadSong + urlList[5]
 		// cut .html
 		substring := linkDownload[0 : len(linkDownload)-5]
-		fmt.Println(substring)
 		listStream = append(listStream, substring)
+		return listStream, nil
 	}
 
 	if strings.Contains(link, album) {
@@ -46,6 +45,10 @@ func (z *Zing) GetDirectLink(link string) ([]string, error) {
 			linkDownload := linkDownloadSong + a
 			listStream = append(listStream, linkDownload)
 		})
+		if len(listStream) == 0 {
+			return nil, errors.New("Invalid Link")
+		}
+		return listStream, nil
 	}
-	return listStream, nil
+	return listStream, errors.New("Unable to dowload this link")
 }

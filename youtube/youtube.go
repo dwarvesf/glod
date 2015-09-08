@@ -66,7 +66,7 @@ func DownloadSingleVideo(video_id string) ([]string, error) {
 // function that receive input is a link and output doesnt matter(but it override GetDirectLink of Glod interface)
 func (youtube *Youtube) GetDirectLink(link string) ([]string, error) {
 	if link == "" {
-		return nil, nil
+		return nil, errors.New("Empty Link")
 	}
 
 	if strings.Contains(link, album) {
