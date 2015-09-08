@@ -118,7 +118,9 @@ func fetchMeta(video_id string) (string, error) {
 	defer resp.Body.Close()
 
 	query_string, _ := ioutil.ReadAll(resp.Body)
-
+	if len(query_string) == 50 {
+		return "", errors.New("Invalid Video Id")
+	}
 	return string(query_string), nil
 }
 
