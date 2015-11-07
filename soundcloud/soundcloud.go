@@ -2,13 +2,14 @@ package soundcloud
 
 import (
 	"errors"
+	"os"
 	"strings"
 
 	"github.com/astaxie/beego/httplib"
 )
 
 const (
-	ClientId  string = "70faad763a2546deb1bdabc3a6bfa722"
+	ClientId  string = os.Getenv("SOUNDCLOUD_CLIENT_ID")
 	ApiLink   string = "http://api.soundcloud.com/resolve.json?"
 	MediaLink string = "http://media.soundcloud.com/stream/"
 )
