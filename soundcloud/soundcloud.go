@@ -9,7 +9,6 @@ import (
 )
 
 const (
-	ClientId  string = os.Getenv("SOUNDCLOUD_CLIENT_ID")
 	ApiLink   string = "http://api.soundcloud.com/resolve.json?"
 	MediaLink string = "http://media.soundcloud.com/stream/"
 )
@@ -26,7 +25,8 @@ func (s *SoundCloud) GetDirectLink(link string) ([]string, error) {
 		return nil, errors.New("Empty Link")
 	}
 	var listStream []string
-	var linkRequest = ApiLink + "url=" + link + "&client_id=" + ClientId
+	var linkRequest = ApiLink + "url=" + link + "&client_id=" + os.Getenv("SOUNDCLOUD_CLIENT_ID")
+
 	var res ReponseSoundCloud
 	req := httplib.Get(linkRequest)
 	req.ToJson(&res)
