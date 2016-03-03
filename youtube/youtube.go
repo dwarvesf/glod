@@ -81,7 +81,8 @@ func (youtube *Youtube) GetDirectLink(link string) ([]string, error) {
 			listLink = append(listLink, a)
 		})
 		for i := 0; i < len(listLink); i++ {
-			go DownloadSingleVideo(listLink[i])
+			l := i
+			go DownloadSingleVideo(listLink[l])
 		}
 		return nil, nil
 	}
