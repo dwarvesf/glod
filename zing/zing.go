@@ -47,8 +47,13 @@ func (z *Zing) GetDirectLink(link string) ([]string, error) {
 
 			splitStringSourceStart := strings.Split(parseString, "<source>")
 			splitStringSourceEnd := strings.Split(splitStringSourceStart[1], "</source>")
-			_s := splitStringSourceEnd[0]
-			listStream = append(listStream, _s[9:len(_s)-3])
+			_sSource := splitStringSourceEnd[0]
+
+			splitStringTitleStart := strings.Split(parseString, "<title>")
+			splitStringTitleEnd := strings.Split(splitStringTitleStart[1], "</title>")
+			_sTitle := splitStringTitleEnd[0]
+
+			listStream = append(listStream, _sSource[9:len(_sSource)-3]+"~"+_sTitle[9:len(_sTitle)-3])
 
 		})
 		return listStream, nil
@@ -74,10 +79,16 @@ func (z *Zing) GetDirectLink(link string) ([]string, error) {
 
 			splitStringSourceStart := strings.Split(parseString, "<source>")
 			for i, v := range splitStringSourceStart {
+
 				if i != 0 && i != len(splitStringSourceStart) {
+
+					splitStringTitleStart := strings.Split(splitStringSourceStart[i-1], "<title>")
+					splitStringTitleEnd := strings.Split(splitStringTitleStart[1], "</title>")
+					_sTitle := splitStringTitleEnd[0]
+
 					splitStringSourceEnd := strings.Split(v, "</source>")
 					_s := splitStringSourceEnd[0]
-					listStream = append(listStream, _s[9:len(_s)-3])
+					listStream = append(listStream, _s[9:len(_s)-3]+"~"+_sTitle[9:len(_sTitle)-3])
 				}
 			}
 
