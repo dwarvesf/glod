@@ -8,8 +8,6 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/astaxie/beego/httplib"
-	"github.com/k0kubun/pp"
 )
 
 type NhacCuaTui struct {
@@ -73,13 +71,22 @@ func (nct *NhacCuaTui) GetDirectLink(link string) ([]string, error) {
 		doc.Find(".item_content").Each(func(i int, s *goquery.Selection) {
 			a, _ := s.Find("a").Attr("href")
 			urlList := strings.Split(a, ".")
-			req := httplib.Get(linkDownloadSong + urlList[3])
-
 			var res ResponseNhacCuaTui
-			req.ToJSON(&res)
+			response, err := http.Get(linkDownloadSong + urlList[3])
+			defer response.Body.Close()
+
+			buffer, _ := ioutil.ReadAll(response.Body)
+			err = json.Unmarshal(buffer, &res)
+			if err != nil {
+				return
+			}
+
+			if res.Data.StreamUrl == "" {
+				return
+			}
 			listStream = append(listStream, res.Data.StreamUrl)
 		})
-		pp.Println(listStream)
+
 		if len(listStream) == 0 {
 			return nil, errors.New("Invalid Link")
 		}
