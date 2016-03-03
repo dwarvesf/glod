@@ -68,7 +68,7 @@ func (nct *NhacCuaTui) GetDirectLink(link string) ([]string, error) {
 			return nil, err
 		}
 		// read all html, find class "item_content" then file tag a, get href infomation
-		doc.Find(".item_content").Each(func(i int, s *goquery.Selection) {
+		doc.Find("#idScrllSongInAlbum").Find(".item_content").Each(func(i int, s *goquery.Selection) {
 			a, _ := s.Find("a").Attr("href")
 			urlList := strings.Split(a, ".")
 			var res ResponseNhacCuaTui
