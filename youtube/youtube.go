@@ -2,11 +2,9 @@ package youtube
 
 import (
 	"errors"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 
@@ -15,6 +13,7 @@ import (
 
 type Youtube struct {
 }
+
 type Video struct {
 	Id, Title, Author, Keywords, Thumbnail_url string
 	Avg_rating                                 float32
@@ -35,39 +34,29 @@ type Format struct {
 }
 
 // function that download single video
-func DownloadSingleVideo(video_id string) ([]string, error) {
+func DownloadSingleVideo(video_id string) string {
 	query_string, err := fetchMeta(video_id)
 	if err != nil {
-		return nil, err
+		return ""
 	}
 	video, err := parseMeta(video_id, query_string)
 
 	if err != nil {
-		return nil, err
+		return ""
 	}
 	//generate file name
 	filename := video.Title + "." + video.GetExtension(0)
-	out, err := os.Create(filename)
-	defer out.Close()
 
-	if err != nil {
-		return nil, errors.New("Unable to write to file " + filename)
-	}
-	resp, err := http.Get(video.Formats[0].Url)
-	defer resp.Body.Close()
-
-	if err != nil {
-		return nil, errors.New("Unable to download video content from Yotutube")
-	}
-	io.Copy(out, resp.Body)
-	return nil, nil
+	return video.Formats[0].Url + "~" + filename
 }
 
 // function that receive input is a link and output doesnt matter(but it override GetDirectLink of Glod interface)
 func (youtube *Youtube) GetDirectLink(link string) ([]string, error) {
 	if link == "" {
-		return nil, nil
+		return nil, errors.New("Empty Link")
 	}
+
+	var listStream []string
 
 	if strings.Contains(link, album) {
 		var listLink []string
@@ -81,20 +70,25 @@ func (youtube *Youtube) GetDirectLink(link string) ([]string, error) {
 			listLink = append(listLink, a)
 		})
 		for i := 0; i < len(listLink); i++ {
-			go DownloadSingleVideo(listLink[i])
+			if DownloadSingleVideo(listLink[i]) != "" {
+				listStream = append(listStream, DownloadSingleVideo(listLink[i]))
+			}
 		}
-		return nil, nil
+		return listStream, nil
 	}
 
 	urlList := strings.Split(link, "/")
 	if len(urlList) < 4 {
 		return nil, errors.New("Invalid link")
 	}
+
 	_videoId := urlList[3]
 	video_id := _videoId[8:len(_videoId)]
-	DownloadSingleVideo(video_id)
+	if DownloadSingleVideo(video_id) != "" {
+		listStream = append(listStream, DownloadSingleVideo(video_id))
+	}
 
-	return nil, nil
+	return listStream, nil
 }
 
 // return extension of video
@@ -118,7 +112,9 @@ func fetchMeta(video_id string) (string, error) {
 	defer resp.Body.Close()
 
 	query_string, _ := ioutil.ReadAll(resp.Body)
-
+	if len(query_string) == 50 {
+		return "", errors.New("Invalid Video Id")
+	}
 	return string(query_string), nil
 }
 

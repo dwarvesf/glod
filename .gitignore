@@ -23,4 +23,5 @@ _testmain.go
 *.test
 *.prof
 lastupdate.tmp
+glod
 .DS_Store

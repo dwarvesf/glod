@@ -1,0 +1,27 @@
+{
+	"ImportPath": "github.com/dwarvesf/glod",
+	"GoVersion": "go1.6",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/PuerkitoBio/goquery",
+			"Comment": "v0.3.2-79-gb444041",
+			"Rev": "b4440419d81240f8451a505b2f806c853bc2befc"
+		},
+		{
+			"ImportPath": "github.com/andybalholm/cascadia",
+			"Rev": "3ad29d1ad1c4f2023e355603324348cf1f4b2d48"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/assert",
+			"Comment": "v1.0-40-g7c2b1e5",
+			"Rev": "7c2b1e5640dcf2631213ca962d892bffa1e08860"
+		},
+		{
+			"ImportPath": "golang.org/x/net/html",
+			"Rev": "5d0a0f8cd486626821d2ba44d471ab1c9271d38f"
+		}
+	]
+}
