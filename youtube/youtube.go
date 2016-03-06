@@ -118,7 +118,7 @@ func fetchMeta(video_id string) (string, error) {
 	return string(query_string), nil
 }
 
-//function parse string to Video struct
+// function parse string to Video struct
 func parseMeta(video_id, query_string string) (Video, error) {
 	u, _ := url.Parse("?" + query_string)
 
