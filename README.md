@@ -36,6 +36,18 @@ if strings.Contains(url, initNhacCuatui) {
 listStream, error := glod.GetDirectLink(url)
 ```
 
+## TODO
+
+Add support for those sources
+
+* [ ] Vimeo
+* [ ] Lynda
+* [ ] Udemy
+* [ ] Flickr
+* [ ] Slideshare
+* [ ] Dropbox
+* [ ] PornHub :sunglasses:
+
 # Contributing
 
 * Fork it!
