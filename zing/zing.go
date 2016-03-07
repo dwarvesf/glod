@@ -37,6 +37,7 @@ func (z *Zing) GetDirectLink(link string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		doc.Find(".zm-player-song").Each(func(i int, s *goquery.Selection) {
 			a, _ := s.Attr("data-xml")
 
@@ -69,6 +70,7 @@ func (z *Zing) GetDirectLink(link string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		doc.Find(".zm-player-song").Each(func(i int, s *goquery.Selection) {
 			a, _ := s.Attr("data-xml")
 
