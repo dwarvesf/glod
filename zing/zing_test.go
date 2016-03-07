@@ -30,7 +30,7 @@ func TestLinkAlbumIsInvalid(t *testing.T) {
 
 func TestDownloadSongSuccess(t *testing.T) {
 	t.Log("Try to input valid song link, expect length of listStream return bigger than 0")
-	listStream, _ := zing.GetDirectLink("http://mp3.zing.vn/bai-hat/Lam-Vo-Anh-Nhe-Chi-Dan/ZW7I0UC.html")
+	listStream, _ := zing.GetDirectLink("http://mp3.zing.vn/bai-hat/Lam-Vo-Anh-Nhe-Chi-Dan/ZW7IU0UC.html")
 	if listStream == nil || len(listStream) == 0 {
 		t.Errorf("Expected length of listStream is bigger than 0 but it is %d instead", len(listStream))
 	}
