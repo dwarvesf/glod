@@ -28,6 +28,11 @@ func (z *Zing) GetDirectLink(link string) ([]string, error) {
 	var listStream []string
 	if strings.Contains(link, song) {
 
+		fmt.Println(len(strings.Split(link, "/")))
+		if len(strings.Split(link, "/")) < 6 {
+			return nil, errors.New("Invalid link")
+		}
+
 		doc, err := goquery.NewDocument(link)
 		if err != nil {
 			return nil, err

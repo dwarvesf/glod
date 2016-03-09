@@ -35,6 +35,6 @@ func TestDownloadSongSuccess(t *testing.T) {
 }
 
 func TestDownloadAlbumSuccess(t *testing.T) {
-	_, err := nct.GetDirectLink("http://www.nhaccuatui.com/playlist/good-for-you-remixes-single-selena-gomez-ft-aap-rocky.dUao1SgvULx1.html")
+	_, err := nct.GetDirectLink("http://www.nhaccuatui.com/playlist/anh-yeu-em-single-pham-truong.G5cC3EbnxuPs.html")
 	assert.Nil(t, err, "We are expecting nil error here")
 }
