@@ -13,7 +13,7 @@ func TestLinkEmptyString(t *testing.T) {
 	assert.Equal(t, "Empty Link", err.Error())
 }
 
-func TestDownload(t *testing.T) {
+func TestDownloadSucces(t *testing.T) {
 	_, err := csn.GetDirectLink("http://chiasenhac.com/nhac-hot-2/we-dont-talk-anymore~charlie-puth-selena-gomez~1621445.html")
 	assert.Nil(t, err, "We are expecting nil error here")
 }
