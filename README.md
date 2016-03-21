@@ -37,17 +37,25 @@ if strings.Contains(url, initNhacCuatui) {
 listStream, error := glod.GetDirectLink(url)
 ```
 
-## TODO
+## Current status and TODO
 
-Add support for those sources
-
-* [ ] Vimeo
+* [x] Mp3 Zing
+* [x] Nhaccuatui
+* [x] Soundcloud
+* [x] Youtube
+* [x] Chiasenhac
+* [x] Facebook
+* [x] Vimeo
 * [ ] Lynda
 * [ ] Udemy
 * [ ] Flickr
 * [ ] Slideshare
 * [ ] Dropbox
 * [ ] PornHub :sunglasses:
+
+# Implementation
+
+We have created an command-line tool that implements glod. Check it out [glod-cli](https://github.com/dwarvesf/glod-cli)!
 
 # Contributing
 
