@@ -2,8 +2,8 @@ package chiasenhac
 
 import (
 	"errors"
-	"fmt"
-	"github.com/PuerkitoBio/goquery"
+	"io/ioutil"
+	"net/http"
 	"strings"
 )
 
@@ -20,20 +20,20 @@ func (csn *ChiaSeNhac) GetDirectLink(link string) ([]string, error) {
 	linkDownloadTmp := strings.Split(link, ".html")
 	linkDownload := linkDownloadTmp[0] + "_download.html"
 
-	doc, err := goquery.NewDocument(linkDownload)
+	res, err := http.Get(linkDownload)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Invalid Link")
 	}
+	defer res.Body.Close()
+	buffer, _ := ioutil.ReadAll(res.Body)
+	parseString := string(buffer)
 
-	doc.Find("#downloadlink").Find("a[href]").Each(func(i int, s *goquery.Selection) {
-		fmt.Println("a")
-		a, _ := s.Attr("href")
-		fmt.Println(a)
-		if strings.Contains(a, "/320/") {
-			listStream = append(listStream, a)
-		}
+	_LinkTmp := strings.Split(parseString, "document.write")
+	_LinkTmp2 := strings.Split(_LinkTmp[2], "href=\"")
+	_LinkTmp3 := strings.Split(_LinkTmp2[1], "\" onmouseover")
+	_LinkTmp4 := strings.Split(_LinkTmp3[0], " ")
+	directLink := _LinkTmp4[0] + _LinkTmp4[1] + _LinkTmp4[2]
 
-	})
-
+	listStream = append(listStream, directLink)
 	return listStream, nil
 }
