@@ -24,16 +24,19 @@ type Zing struct {
 func (z *Zing) GetDirectLink(link string) ([]string, error) {
 	if link == "" {
 		return nil, errors.New("Empty Link")
+
 	}
 	var listStream []string
 	if strings.Contains(link, song) {
 		if len(strings.Split(link, "/")) < 6 {
 			return nil, errors.New("Invalid link")
+
 		}
 
 		doc, err := goquery.NewDocument(link)
 		if err != nil {
 			return nil, err
+
 		}
 
 		doc.Find("#tabService").Each(func(i int, s *goquery.Selection) {
@@ -56,14 +59,17 @@ func (z *Zing) GetDirectLink(link string) ([]string, error) {
 			_Title := strings.Split(stringTitle[1], "/")
 
 			listStream = append(listStream, InitMp3+listStreamTmp[0]+"~"+_Title[0])
+
 		})
 		return listStream, nil
+
 	}
 
 	if strings.Contains(link, album) {
 		doc, err := goquery.NewDocument(link)
 		if err != nil {
 			return nil, err
+
 		}
 
 		doc.Find(".fn-playlist-item").Each(func(i int, s *goquery.Selection) {
@@ -74,6 +80,7 @@ func (z *Zing) GetDirectLink(link string) ([]string, error) {
 			if err != nil {
 				fmt.Println("Error while downloading", linkDownload, "-", err)
 				return
+
 			}
 			defer response.Body.Close()
 			buffer, _ := ioutil.ReadAll(response.Body)
@@ -88,9 +95,12 @@ func (z *Zing) GetDirectLink(link string) ([]string, error) {
 			_Title := strings.Split(stringTitle[1], "/")
 
 			listStream = append(listStream, InitMp3+listStreamTmp[0]+"~"+_Title[0])
+
 		})
 		return listStream, nil
+
 	}
 
 	return listStream, errors.New("Unable to dowload this link")
+
 }
