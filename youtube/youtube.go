@@ -24,6 +24,7 @@ type Video struct {
 const (
 	linkDownload        = "http://www.youtube.com/get_video_info?&video_id="
 	album        string = "playlist"
+	isFail       string = "status=ok"
 )
 
 var FORMATS []string = []string{"3gp", "mp4", "flv", "webm", "avi"}
@@ -112,7 +113,7 @@ func fetchMeta(video_id string) (string, error) {
 	defer resp.Body.Close()
 
 	query_string, _ := ioutil.ReadAll(resp.Body)
-	if len(query_string) == 50 {
+	if strings.Contains(string(query_string), isFail) != true {
 		return "", errors.New("Invalid Video Id")
 	}
 	return string(query_string), nil
