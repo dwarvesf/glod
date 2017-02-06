@@ -2,7 +2,6 @@ package zing
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -76,12 +75,7 @@ func (z *Zing) GetDirectLink(link string) ([]string, error) {
 			dataCode, _ := s.Attr("data-code")
 
 			linkDownload := linkDownloadSong + dataCode
-			response, err := http.Get(linkDownload)
-			if err != nil {
-				fmt.Println("Error while downloading", linkDownload, "-", err)
-				return
-
-			}
+			response, _ := http.Get(linkDownload)
 			defer response.Body.Close()
 			buffer, _ := ioutil.ReadAll(response.Body)
 
