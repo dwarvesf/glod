@@ -1,35 +1,22 @@
 package nhaccuatui
 
 import (
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
 	"strings"
-
-	"github.com/PuerkitoBio/goquery"
 )
 
 type NhacCuaTui struct {
 }
 
 const (
-	song             string = "http://www.nhaccuatui.com/bai-hat/"
-	album            string = "http://www.nhaccuatui.com/playlist/"
-	linkDownloadSong string = "http://www.nhaccuatui.com/download/song/"
+	song  string = "http://www.nhaccuatui.com/bai-hat/"
+	album string = "http://www.nhaccuatui.com/playlist/"
+
+	isDownloadSong     string = "http://www.nhaccuatui.com/flash/xml?html5=true&key1"
+	isDownloadPlaylist string = "http://www.nhaccuatui.com/flash/xml?html5=true&key2"
 )
-
-type ResponseNhacCuaTui struct {
-	Data           ResponseData `json:"data"`
-	ErrorMessage   string       `json:"error_message"`
-	ErrorCode      int          `json:"error_code"`
-	StatusReadMode bool         `json:"STATUS_READ_MODE"`
-}
-
-type ResponseData struct {
-	StreamUrl string `json:"stream_url"`
-	IsCharge  string `json:"is_charge"`
-}
 
 // function that input is a link then return an slice of url that permantly download file and error(if it has)
 func (nct *NhacCuaTui) GetDirectLink(link string) ([]string, error) {
@@ -37,61 +24,57 @@ func (nct *NhacCuaTui) GetDirectLink(link string) ([]string, error) {
 		return nil, errors.New("Empty Link")
 	}
 
-	// implement
+	urlList := strings.Split(link, ".")
+	if len(urlList) < 4 {
+		return nil, errors.New("Wrong Format Link")
+	}
+
+	if len(urlList[3]) != 12 {
+		return nil, errors.New("Invalid Link")
+	}
+
 	var listStream []string
+	res, _ := http.Get(link)
+	defer res.Body.Close()
+	buffer, _ := ioutil.ReadAll(res.Body)
+
+	parseString := string(buffer)
+
+	xmlURL := strings.Split(parseString, "player.peConfig.xmlURL = \"")
+	_xmlURL := strings.Split(xmlURL[1], "\";")
+
+	if (strings.Contains(_xmlURL[0], isDownloadSong) != true) && (strings.Contains(_xmlURL[0], isDownloadPlaylist) != true) {
+		return nil, errors.New("Invalid Link")
+	}
+
+	res, _ = http.Get(_xmlURL[0])
+	buffer, _ = ioutil.ReadAll(res.Body)
+
+	parseString = string(buffer)
+
 	if strings.Contains(link, song) {
-		urlList := strings.Split(link, ".")
-		if len(urlList) < 4 {
-			return nil, errors.New("Wrong Format Link")
-		}
+		directLink := strings.Split(parseString, "http://")
+		_directLink := strings.Split(directLink[1], "]]>")
+		_directLink[0] = "http://" + _directLink[0]
 
-		var res ResponseNhacCuaTui
-		response, err := http.Get(linkDownloadSong + urlList[3])
-		defer response.Body.Close()
-
-		buffer, _ := ioutil.ReadAll(response.Body)
-		err = json.Unmarshal(buffer, &res)
-		if err != nil {
-			return nil, errors.New("Error parsing")
-		}
-
-		if res.Data.StreamUrl == "" {
-			return nil, errors.New("Invalid Link")
-		}
-		listStream = append(listStream, res.Data.StreamUrl)
-		return listStream, nil
+		listStream = append(listStream, _directLink[0])
 	}
 
 	if strings.Contains(link, album) {
-		doc, err := goquery.NewDocument(link)
-		if err != nil {
-			return nil, err
-		}
-		// read all html, find class "item_content" then file tag a, get href infomation
-		doc.Find("#idScrllSongInAlbum").Find(".item_content").Each(func(i int, s *goquery.Selection) {
-			a, _ := s.Find("a").Attr("href")
-			urlList := strings.Split(a, ".")
-			var res ResponseNhacCuaTui
-			response, err := http.Get(linkDownloadSong + urlList[3])
-			defer response.Body.Close()
+		locationLink := strings.Split(parseString, "<location>")
+		for index := range locationLink {
+			if index > 1 {
+				directLink := strings.Split(locationLink[index], "http://")
+				_directLink := strings.Split(directLink[1], "]]>")
+				_directLink[0] = "http://" + _directLink[0]
 
-			buffer, _ := ioutil.ReadAll(response.Body)
-			err = json.Unmarshal(buffer, &res)
-			if err != nil {
-				return
+				listStream = append(listStream, _directLink[0])
 			}
-
-			if res.Data.StreamUrl == "" {
-				return
-			}
-			listStream = append(listStream, res.Data.StreamUrl)
-		})
-
-		if len(listStream) == 0 {
-			return nil, errors.New("Invalid Link")
 		}
-		return listStream, nil
 	}
-	return listStream, errors.New("Unable to dowload this link")
+	if len(listStream) == 0 {
+		return nil, errors.New("Invalid Link")
+	}
+	return listStream, nil
 
 }

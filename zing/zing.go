@@ -2,7 +2,6 @@ package zing
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -11,9 +10,10 @@ import (
 )
 
 const (
+	InitMp3          string = "http://www.mp3.zing.vn"
 	song             string = "http://mp3.zing.vn/bai-hat/"
 	album            string = "http://mp3.zing.vn/album/"
-	linkDownloadSong string = "http://v3.mp3.zing.vn/download/vip/song/"
+	linkDownloadSong string = "http://www.mp3.zing.vn/json/song/get-download?code="
 )
 
 type Zing struct {
@@ -23,84 +23,78 @@ type Zing struct {
 func (z *Zing) GetDirectLink(link string) ([]string, error) {
 	if link == "" {
 		return nil, errors.New("Empty Link")
-	}
 
+	}
 	var listStream []string
 	if strings.Contains(link, song) {
-
 		if len(strings.Split(link, "/")) < 6 {
 			return nil, errors.New("Invalid link")
+
 		}
 
 		doc, err := goquery.NewDocument(link)
 		if err != nil {
 			return nil, err
+
 		}
 
-		doc.Find(".zm-player-song").Each(func(i int, s *goquery.Selection) {
-			a, _ := s.Attr("data-xml")
+		doc.Find("#tabService").Each(func(i int, s *goquery.Selection) {
 
-			response, err := http.Get(a)
-			if err != nil {
-				fmt.Println("Error while downloading", a, "-", err)
-				return
-			}
+			dataCode, _ := s.Attr("data-code")
+
+			linkDownload := linkDownloadSong + dataCode
+			response, _ := http.Get(linkDownload)
+
 			defer response.Body.Close()
 			buffer, _ := ioutil.ReadAll(response.Body)
 
 			parseString := string(buffer)
 
-			splitStringSourceStart := strings.Split(parseString, "<source>")
-			splitStringSourceEnd := strings.Split(splitStringSourceStart[1], "</source>")
-			_sSource := splitStringSourceEnd[0]
+			stringSource := strings.Split(parseString, "\"link\":\"")
+			_stringSource := strings.Split(stringSource[1], dataCode)
+			listStreamTmp := strings.Split(_stringSource[0], "\",\"size")
 
-			splitStringTitleStart := strings.Split(parseString, "<title>")
-			splitStringTitleEnd := strings.Split(splitStringTitleStart[1], "</title>")
-			_sTitle := splitStringTitleEnd[0]
+			stringTitle := strings.Split(listStreamTmp[0], "/song/")
+			_Title := strings.Split(stringTitle[1], "/")
 
-			listStream = append(listStream, _sSource[9:len(_sSource)-3]+"~"+_sTitle[9:len(_sTitle)-3])
+			listStream = append(listStream, InitMp3+listStreamTmp[0]+"~"+_Title[0])
 
 		})
 		return listStream, nil
+
 	}
 
 	if strings.Contains(link, album) {
 		doc, err := goquery.NewDocument(link)
 		if err != nil {
 			return nil, err
+
 		}
 
-		doc.Find(".zm-player-song").Each(func(i int, s *goquery.Selection) {
-			a, _ := s.Attr("data-xml")
+		doc.Find(".fn-playlist-item").Each(func(i int, s *goquery.Selection) {
+			dataCode, _ := s.Attr("data-code")
 
-			response, err := http.Get(a)
-			if err != nil {
-				fmt.Println("Error while downloading", a, "-", err)
-				return
-			}
+			linkDownload := linkDownloadSong + dataCode
+			response, _ := http.Get(linkDownload)
 			defer response.Body.Close()
 			buffer, _ := ioutil.ReadAll(response.Body)
 
 			parseString := string(buffer)
 
-			splitStringSourceStart := strings.Split(parseString, "<source>")
-			for i, v := range splitStringSourceStart {
+			stringSource := strings.Split(parseString, "\"link\":\"")
+			_stringSource := strings.Split(stringSource[1], dataCode)
+			listStreamTmp := strings.Split(_stringSource[0], "\",\"size")
 
-				if i != 0 && i != len(splitStringSourceStart) {
+			stringTitle := strings.Split(listStreamTmp[0], "/song/")
+			_Title := strings.Split(stringTitle[1], "/")
 
-					splitStringTitleStart := strings.Split(splitStringSourceStart[i-1], "<title>")
-					splitStringTitleEnd := strings.Split(splitStringTitleStart[1], "</title>")
-					_sTitle := splitStringTitleEnd[0]
-
-					splitStringSourceEnd := strings.Split(v, "</source>")
-					_s := splitStringSourceEnd[0]
-					listStream = append(listStream, _s[9:len(_s)-3]+"~"+_sTitle[9:len(_sTitle)-3])
-				}
-			}
+			listStream = append(listStream, InitMp3+listStreamTmp[0]+"~"+_Title[0])
 
 		})
-
 		return listStream, nil
+
 	}
+
 	return listStream, errors.New("Unable to dowload this link")
+
 }

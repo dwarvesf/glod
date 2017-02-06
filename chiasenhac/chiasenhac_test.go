@@ -14,6 +14,6 @@ func TestLinkEmptyString(t *testing.T) {
 }
 
 func TestDownloadSucces(t *testing.T) {
-	_, err := csn.GetDirectLink("http://chiasenhac.com/nhac-hot-2/we-dont-talk-anymore~charlie-puth-selena-gomez~1621445.html")
+	_, err := csn.GetDirectLink("http://m1.chiasenhac.vn/mp3/vietnam/v-pop/ai-ra-xu-hue~quang-le-le-minh-trung~ts3vtm07q2f8nt.html")
 	assert.Nil(t, err, "We are expecting nil error here")
 }

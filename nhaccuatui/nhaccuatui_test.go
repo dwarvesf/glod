@@ -30,7 +30,7 @@ func TestLinkAlbumIsInvalid(t *testing.T) {
 }
 
 func TestDownloadSongSuccess(t *testing.T) {
-	_, err := nct.GetDirectLink("http://www.nhaccuatui.com/bai-hat/boi-vi-em-het-yeu-anh-chi-dan.Z4Ym6we057sG.html")
+	_, err := nct.GetDirectLink("http://www.nhaccuatui.com/bai-hat/cho-em-gan-anh-them-chut-nua-huong-tram.zcHcXTHdZsSD.html")
 	assert.Nil(t, err, "We are expecting nil error here")
 }
 
