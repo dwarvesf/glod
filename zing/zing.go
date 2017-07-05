@@ -24,9 +24,15 @@ const (
 type Zing struct {
 }
 
+type Response struct {
+	Artist    string
+	StreamURL string
+	Title     string
+}
+
 type ZingResponse struct {
-	// Title  string `json:"title"`
-	// Artist string `json:"artist"`
+	Title  string `json:"title"`
+	Artist string `json:"artist"`
 	Source struct {
 		Url  string `json:"128"`
 		Url2 string `json:"320"`
@@ -35,7 +41,7 @@ type ZingResponse struct {
 }
 
 // function that input is a link then return an slice of url that permantly download file and error(if it has)
-func (z *Zing) GetDirectLink(link string) ([]string, error) {
+func (z *Zing) GetDirectLink(link string) ([]Response, error) {
 	if link == "" {
 		return nil, errors.New("Empty Link")
 	}
@@ -77,10 +83,10 @@ func GetSongID(link string) string {
 }
 
 // GetSongs return list of song
-func GetSongs(listLink []string) []string {
+func GetSongs(listLink []string) []Response {
 
-	var listSong []string
-	var song string
+	var listSong []Response
+	var song Response
 	var zingResponse ZingResponse
 
 	for i, _ := range listLink {
@@ -97,7 +103,9 @@ func GetSongs(listLink []string) []string {
 			log.Println(err)
 		}
 
-		song = zingResponse.Source.Url
+		song.Artist = zingResponse.Artist
+		song.Title = zingResponse.Title
+		song.StreamURL = zingResponse.Source.Url
 
 		listSong = append(listSong, song)
 	}
