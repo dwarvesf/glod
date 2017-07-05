@@ -5,60 +5,102 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
+type Response struct {
+	Artist    string
+	StreamURL string
+	Title     string
+}
+
+// Soundcloud const
 const (
-	ApiLink   string = "http://api.soundcloud.com/resolve.json?"
-	MediaLink string = "http://media.soundcloud.com/stream/"
-	CLIENT_ID        = "70faad763a2546deb1bdabc3a6bfa722"
+	ApiLink     string = "http://api.soundcloud.com/resolve.json?"
+	MediaLink   string = "http://media.soundcloud.com/stream/"
+	CLIENT_ID   string = "70faad763a2546deb1bdabc3a6bfa722"
+	urlSong     int    = 5
+	urlPlaylist int    = 6
 )
 
 type ReponseSoundCloud struct {
-	WaveFormUrl string `json:"waveform_url"`
-	StreamURL   string `json:"stream_url"`
+	StreamURL string `json:"stream_url"`
+	TrackList []struct {
+		StreamURL string `json:"stream_url"`
+		Title     string `json:"title"`
+	} `json:"tracks"`
+	Title  string `json:"title"`
+	UserID int    `json:"id"`
 }
 
 type SoundCloud struct {
 }
 
-func (s *SoundCloud) GetDirectLink(link string) ([]string, error) {
-	if link == "" {
-		return nil, errors.New("Empty Link")
-	}
-	var listStream []string
+func (s *SoundCloud) GetDirectLink(link string) ([]Response, error) {
+	var listSong []Response
+	var song Response
 	var linkRequest = ApiLink + "url=" + link + "&client_id=" + CLIENT_ID
 
 	var res ReponseSoundCloud
 	response, err := http.Get(linkRequest)
 	if err != nil {
-		return nil, errors.New("Error while downloading")
+		return nil, errors.New("Error download this song")
 	}
-
 	defer response.Body.Close()
 
-	buffer, _ := ioutil.ReadAll(response.Body)
+	// server forbidden, get song title only
+	if response.StatusCode == 403 {
+		song.Title = crawlTitleFromURL(link)
+		listSong = append(listSong, song)
+	} else {
 
-	err = json.Unmarshal(buffer, &res)
-	if err != nil {
-		return nil, errors.New("Error parsing")
+		buffer, _ := ioutil.ReadAll(response.Body)
+
+		err = json.Unmarshal(buffer, &res)
+		if err != nil {
+			return nil, errors.New("Error parsing")
+		}
+
+		if len(strings.Split(link, "/")) == urlSong {
+			if res.StreamURL == "" {
+				return nil, errors.New("This song is not streamable")
+			}
+
+			url := res.StreamURL + "?client_id=" + CLIENT_ID
+
+			song.StreamURL = url
+			song.Title = res.Title
+			listSong = append(listSong, song)
+
+		} else if len(strings.Split(link, "/")) == urlPlaylist {
+			for i, _ := range res.TrackList {
+				if res.TrackList[i].StreamURL != "" {
+					url := res.TrackList[i].StreamURL + "?client_id=" + CLIENT_ID
+
+					song.StreamURL = url
+					song.Title = res.TrackList[i].Title
+					listSong = append(listSong, song)
+					if strings.Contains(song.Title, "-") {
+						tmp := strings.Split(song.Title, "-")
+
+						song.Title = tmp[0]
+						song.Artist = tmp[1]
+					}
+				}
+			}
+		} else {
+			return nil, errors.New("Wrong Format Link")
+		}
 	}
+	return listSong, nil
+}
 
-	if res.StreamURL == "" {
-		return nil, errors.New("This song is not streamable")
-	}
+// crawlTitleFromURL return a song title from given url
+func crawlTitleFromURL(link string) string {
+	_title := strings.Split(link, "/")
+	title := strings.Split(_title[4], "-ft-")
 
-	// urlList := strings.Split(res.WaveFormUrl, "/")
-	// if len(urlList) < 4 {
-	// return nil, errors.New("Wrong Format Link")
-	// }
+	title[0] = strings.Replace(title[0], "-", " ", -1)
 
-	// longString := urlList[3]
-	// substring := longString[0 : len(longString)-6]
-
-	// listStream = append(listStream, MediaLink+substring)
-
-	url := res.StreamURL + "?client_id=" + CLIENT_ID
-	listStream = append(listStream, url)
-
-	return listStream, nil
+	return title[0]
 }

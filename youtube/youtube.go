@@ -2,6 +2,7 @@ package youtube
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -14,11 +15,10 @@ import (
 type Youtube struct {
 }
 
-type Video struct {
-	Id, Title, Author, Keywords, Thumbnail_url string
-	Avg_rating                                 float32
-	View_count, Length_seconds                 int
-	Formats                                    []Format
+type Response struct {
+	Artist    string
+	StreamURL string
+	Title     string
 }
 
 const (
@@ -35,47 +35,59 @@ type Format struct {
 }
 
 // function that download single video
-func DownloadSingleVideo(video_id string) string {
+func DownloadSingleVideo(video_id string) (Response, error) {
+	var song Response
+
 	query_string, err := fetchMeta(video_id)
 	if err != nil {
-		return ""
+		return song, errors.New("Cannot fetchMeta")
 	}
-	video, err := parseMeta(video_id, query_string)
 
+	song, err = parseMeta(video_id, query_string)
 	if err != nil {
-		return ""
+		return song, errors.New("Cannot parseMeta")
 	}
-	//generate file name
-	filename := video.Title + "." + video.GetExtension(0)
 
-	return video.Formats[0].Url + "~" + filename
+	return song, nil
 }
 
 // function that receive input is a link and output doesnt matter(but it override GetDirectLink of Glod interface)
-func (youtube *Youtube) GetDirectLink(link string) ([]string, error) {
+func (youtube *Youtube) GetDirectLink(link string) ([]Response, error) {
+	var listSong []Response
+	var song Response
+
 	if link == "" {
 		return nil, errors.New("Empty Link")
 	}
 
-	var listStream []string
+	if strings.Contains(link, "&list=") {
+		link = ToPlayList(link)
+	}
 
 	if strings.Contains(link, album) {
-		var listLink []string
+		var listVideoID []string
 		doc, err := goquery.NewDocument(link)
 		if err != nil {
 			return nil, err
 		}
 
 		doc.Find(".pl-video").Each(func(i int, s *goquery.Selection) {
-			a, _ := s.Attr("data-video-id")
-			listLink = append(listLink, a)
+			videoID, _ := s.Attr("data-video-id")
+			listVideoID = append(listVideoID, videoID)
 		})
-		for i := 0; i < len(listLink); i++ {
-			if DownloadSingleVideo(listLink[i]) != "" {
-				listStream = append(listStream, DownloadSingleVideo(listLink[i]))
+		for i := 0; i < len(listVideoID); i++ {
+			song, err := DownloadSingleVideo(listVideoID[i])
+			if err != nil {
+				song = GetTitleAndArtist(link, i)
 			}
+			listSong = append(listSong, song)
 		}
-		return listStream, nil
+		for i, _ := range listSong {
+			fmt.Println("Artist : " + listSong[i].Artist)
+			fmt.Println("Title : " + listSong[i].Title)
+			fmt.Println("URL : " + listSong[i].StreamURL)
+		}
+		return listSong, nil
 	}
 
 	urlList := strings.Split(link, "/")
@@ -85,22 +97,20 @@ func (youtube *Youtube) GetDirectLink(link string) ([]string, error) {
 
 	_videoId := urlList[3]
 	video_id := _videoId[8:len(_videoId)]
-	if DownloadSingleVideo(video_id) != "" {
-		listStream = append(listStream, DownloadSingleVideo(video_id))
+	song, err := DownloadSingleVideo(video_id)
+	if err != nil {
+
+		// 1 means single video
+		song = GetTitleAndArtist(link, 1)
+
+		fmt.Println("Artist : " + song.Artist)
+		fmt.Println("Title : " + song.Title)
+		fmt.Println("URL : " + song.StreamURL)
+
 	}
+	listSong = append(listSong, song)
 
-	return listStream, nil
-}
-
-// return extension of video
-func (video *Video) GetExtension(index int) string {
-	for i := 0; i < len(FORMATS); i++ {
-		if strings.Contains(video.Formats[index].Video_type, FORMATS[i]) {
-			return FORMATS[i]
-		}
-	}
-
-	return "avi"
+	return listSong, nil
 }
 
 // function readall body of request and return string body
@@ -120,49 +130,83 @@ func fetchMeta(video_id string) (string, error) {
 }
 
 // function parse string to Video struct
-func parseMeta(video_id, query_string string) (Video, error) {
-	u, _ := url.Parse("?" + query_string)
+func parseMeta(video_id, query_string string) (Response, error) {
+	var song Response
 
+	u, _ := url.Parse("?" + query_string)
 	query := u.Query()
 
 	if query.Get("errorcode") != "" || query.Get("status") == "fail" {
-		return Video{}, errors.New(query.Get("reason"))
+		return song, errors.New(query.Get("reason"))
 	}
 
-	video := Video{
-		Id:            video_id,
-		Title:         query.Get("title"),
-		Author:        query.Get("author"),
-		Keywords:      query.Get("keywords"),
-		Thumbnail_url: query.Get("thumbnail_url"),
-	}
-
-	v, _ := strconv.Atoi(query.Get("view_count"))
-	video.View_count = v
-
-	r, _ := strconv.ParseFloat(query.Get("avg_rating"), 32)
-	video.Avg_rating = float32(r)
-
-	l, _ := strconv.Atoi(query.Get("length_seconds"))
-	video.Length_seconds = l
+	song.Title = query.Get("title")
+	song.Artist = query.Get("author")
 
 	format_params := strings.Split(query.Get("url_encoded_fmt_stream_map"), ",")
-
+	var formats []Format
 	for _, f := range format_params {
 		furl, _ := url.Parse("?" + f)
 		fquery := furl.Query()
 
 		itag, _ := strconv.Atoi(fquery.Get("itag"))
 
-		video.Formats = append(
-			video.Formats,
+		formats = append(
+			formats,
 			Format{
 				Itag:       itag,
 				Video_type: fquery.Get("type"),
 				Quality:    fquery.Get("quality"),
-				Url:        fquery.Get("url") + "&signature=" + fquery.Get("sig"),
+				Url:        fquery.Get("url"),
 			})
 	}
+	if strings.Contains(formats[0].Url, "signature=") {
+		song.StreamURL = formats[0].Url
+	}
+	return song, nil
+}
 
-	return video, nil
+// GetTitleAndArtist returns Title and Artist in case we can't crawl URL
+func GetTitleAndArtist(link string, index int) Response {
+	var song Response
+
+	doc, err := goquery.NewDocument(link)
+	if err != nil {
+		return song
+	}
+
+	if strings.Contains(link, album) {
+		doc.Find(".pl-video").EachWithBreak(func(i int, s *goquery.Selection) bool {
+			if i == index {
+				dataTitle, _ := s.Attr("data-title")
+				song.Artist = dataTitle
+
+				if strings.Contains(dataTitle, "-") {
+					temp := strings.Split(dataTitle, "-")
+					song.Title = temp[1]
+					song.Artist = temp[0]
+				}
+				return false
+			}
+			return true
+		})
+	} else {
+		doc.Find("#eow-title").Each(func(i int, s *goquery.Selection) {
+			dataTitle, _ := s.Attr("title")
+			song.Artist = dataTitle
+
+			if strings.Contains(dataTitle, "-") {
+				temp := strings.Split(dataTitle, "-")
+				song.Title = temp[1]
+				song.Artist = temp[0]
+			}
+		})
+	}
+	return song
+}
+
+func ToPlayList(link string) string {
+	temp := strings.Split(link, "&list=")
+	link = temp[1]
+	return link
 }

@@ -4,36 +4,117 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
+
+	"github.com/goquery"
+)
+
+const (
+	CsnPrefix         = "chiasenhac"
+	csnDownloadSuffix = "download.html"
+	csnAblum          = "chiasenhac.vn/nghe-album/"
+	csnSong1          = "chiasenhac.vn/mp3"
+	csnSong2          = "chiasenhac.vn/nhac-hot"
+
+	csnStreamURL = "/128/"
 )
 
 type ChiaSeNhac struct {
 }
 
-func (csn *ChiaSeNhac) GetDirectLink(link string) ([]string, error) {
+type Response struct {
+	Artist    string
+	StreamURL string
+	Title     string
+}
+
+// TODO: test chiesenhac
+func (csn *ChiaSeNhac) GetDirectLink(link string) ([]Response, error) {
 	if link == "" {
 		return nil, errors.New("Empty Link")
 	}
 
-	var listStream []string
+	var listLink []string
 
-	linkDownloadTmp := strings.Split(link, ".html")
-	linkDownload := linkDownloadTmp[0] + "_download.html"
+	if strings.Contains(link, csnSong1) || strings.Contains(link, csnSong2) {
+		if !strings.Contains(link, csnDownloadSuffix) {
+			url := strings.Replace(link, ".html", "_download.html", -1)
+			listLink = append(listLink, url)
+		} else {
+			listLink = append(listLink, link)
+		}
+	} else if strings.Contains(link, csnAblum) {
+		doc, err := goquery.NewDocument(link)
+		if err != nil {
+			return nil, err
+		}
 
-	res, err := http.Get(linkDownload)
-	if err != nil {
-		return nil, errors.New("Invalid Link")
+		var url string
+		for i := 1; ; i++ {
+			url = ""
+			doc.Find("#playlist-" + strconv.Itoa(i)).Find("td").Find("a").EachWithBreak(func(i int, s *goquery.Selection) bool {
+				url, _ = s.Attr("href")
+				if strings.Contains(url, csnDownloadSuffix) {
+					return false
+				}
+				return true
+			})
+			if strings.Contains(url, csnDownloadSuffix) {
+				listLink = append(listLink, url)
+			} else {
+				break
+			}
+		}
 	}
-	defer res.Body.Close()
-	buffer, _ := ioutil.ReadAll(res.Body)
-	parseString := string(buffer)
 
-	_LinkTmp := strings.Split(parseString, "document.write")
-	_LinkTmp2 := strings.Split(_LinkTmp[2], "href=\"")
-	_LinkTmp3 := strings.Split(_LinkTmp2[1], "\" onmouseover")
-	_LinkTmp4 := strings.Split(_LinkTmp3[0], " ")
-	directLink := _LinkTmp4[0] + _LinkTmp4[1] + _LinkTmp4[2]
+	listSong := getSongs(listLink)
 
-	listStream = append(listStream, directLink)
-	return listStream, nil
+	return listSong, nil
+}
+
+func getSongs(listLink []string) []Response {
+	var listSong []Response
+	var song Response
+	for i := range listLink {
+		res, err := http.Get(listLink[i])
+		if err != nil {
+			return nil
+		}
+
+		defer res.Body.Close()
+
+		buffer, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil
+		}
+
+		parseString := string(buffer)
+
+		tmp := strings.Split(parseString, "document.write")
+		urlString := strings.Split(tmp[1], "href=\"")
+		url := strings.Split(urlString[1], "\" onmouseover")
+
+		streamURL := url[0]
+
+		title, artist := getTitleAndArtist(streamURL)
+
+		song.StreamURL = streamURL
+		song.Title = title
+		song.Artist = artist
+		listSong = append(listSong, song)
+	}
+	return listSong
+}
+
+func getTitleAndArtist(link string) (string, string) {
+	_title := strings.Split(link, "/")
+	if strings.Contains(_title[8], "%20-%20") {
+		title := strings.Split(_title[8], "%20-%20")
+		title[0] = strings.Replace(title[0], "%20", " ", -1)
+		_artist := strings.Split(title[1], "[MP3")
+		artist := strings.Replace(_artist[0], "%20", " ", -1)
+		return title[0], artist
+	}
+	return "", ""
 }
