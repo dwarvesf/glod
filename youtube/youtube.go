@@ -1,8 +1,6 @@
 package youtube
 
-import (
-	"git.dwarvesf.com/glod"
-)
+import "github.com/dwarvesf/glod"
 
 type Youtube struct {
 }

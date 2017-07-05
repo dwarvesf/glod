@@ -1,8 +1,6 @@
 package soundcloud
 
-import (
-	"git.dwarvesf.com/glod"
-)
+import "github.com/dwarvesf/glod"
 
 type Response struct {
 	Artist    string

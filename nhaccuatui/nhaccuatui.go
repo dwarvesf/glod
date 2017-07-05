@@ -1,7 +1,8 @@
 package nhaccuatui
 
+import "github.com/dwarvesf/glod"
+
 type NhacCuaTui struct {
-	"git.dwarvesf.com/glod"
 }
 
 const (

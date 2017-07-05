@@ -1,6 +1,6 @@
 package vimeo
 
-import "git.dwarvesf.com/glod"
+import "github.com/dwarvesf/glod"
 
 type Vimeo struct {
 }

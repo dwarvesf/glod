@@ -1,8 +1,6 @@
 package chiasenhac
 
-import (
-	"git.dwarvesf.com/glod"
-)
+import "github.com/dwarvesf/glod"
 
 const (
 	CsnPrefix         = "chiasenhac"

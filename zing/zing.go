@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
-	"git.dwarvesf.com/glod"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/dwarvesf/glod"
 )
 
 const (
