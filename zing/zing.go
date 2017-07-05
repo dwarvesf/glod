@@ -1,100 +1,108 @@
 package zing
 
 import (
+	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/dwarvesf/glod"
 )
 
 const (
-	InitMp3          string = "http://www.mp3.zing.vn"
-	song             string = "http://mp3.zing.vn/bai-hat/"
-	album            string = "http://mp3.zing.vn/album/"
-	linkDownloadSong string = "http://www.mp3.zing.vn/json/song/get-download?code="
+	ZingPrefix = "zing"
+)
+
+const (
+	zingSong         string = "http://mp3.zing.vn/bai-hat/"
+	zingAlbum        string = "http://mp3.zing.vn/album/"
+	playList         string = "http://mp3.zing.vn/playlist/"
+	linkDownloadSong string = "http://api.mp3.zing.vn/api/mobile/song/getsonginfo?requestdata=" //+ {"id":"IDBAIHAT"}
 )
 
 type Zing struct {
 }
 
+type ZingResponse struct {
+	Title  string `json:"title"`
+	Artist string `json:"artist"`
+	Source struct {
+		Url  string `json:"128"`
+		Url2 string `json:"320"`
+		Url3 string `json:"lossless"`
+	} `json:"source"`
+}
+
 // function that input is a link then return an slice of url that permantly download file and error(if it has)
-func (z *Zing) GetDirectLink(link string) ([]string, error) {
+func (z *Zing) GetDirectLink(link string) ([]glod.Response, error) {
 	if link == "" {
 		return nil, errors.New("Empty Link")
-
 	}
-	var listStream []string
-	if strings.Contains(link, song) {
+
+	var listLink []string
+
+	if strings.Contains(link, zingSong) {
 		if len(strings.Split(link, "/")) < 6 {
 			return nil, errors.New("Invalid link")
-
 		}
-
+		listLink = append(listLink, link)
+	} else if strings.Contains(link, zingAlbum) || strings.Contains(link, playList) {
 		doc, err := goquery.NewDocument(link)
 		if err != nil {
 			return nil, err
-
 		}
-
-		doc.Find("#tabService").Each(func(i int, s *goquery.Selection) {
-
-			dataCode, _ := s.Attr("data-code")
-
-			linkDownload := linkDownloadSong + dataCode
-			response, _ := http.Get(linkDownload)
-
-			defer response.Body.Close()
-			buffer, _ := ioutil.ReadAll(response.Body)
-
-			parseString := string(buffer)
-
-			stringSource := strings.Split(parseString, "\"link\":\"")
-			_stringSource := strings.Split(stringSource[1], dataCode)
-			listStreamTmp := strings.Split(_stringSource[0], "\",\"size")
-
-			stringTitle := strings.Split(listStreamTmp[0], "/song/")
-			_Title := strings.Split(stringTitle[1], "/")
-
-			listStream = append(listStream, InitMp3+listStreamTmp[0]+"~"+_Title[0])
-
+		doc.Find(".item-song").Find("a").Each(func(i int, s *goquery.Selection) {
+			url, _ := s.Attr("href")
+			if strings.Contains(url, "bai-hat") {
+				listLink = append(listLink, url)
+			}
 		})
-		return listStream, nil
-
 	}
 
-	if strings.Contains(link, album) {
-		doc, err := goquery.NewDocument(link)
+	listSong := GetSongs(listLink)
+
+	return listSong, nil
+}
+
+// GetSongID return song id from given link
+func GetSongID(link string) string {
+
+	temp := strings.Split(link, "/")
+	_temp := strings.Split(temp[5], ".")
+
+	ID := _temp[0]
+
+	return ID
+}
+
+// GetSongs return list of song
+func GetSongs(listLink []string) []glod.Response {
+
+	var listSong []glod.Response
+	var song glod.Response
+	var zingResponse ZingResponse
+
+	for i, _ := range listLink {
+		id := GetSongID(listLink[i])
+		link := linkDownloadSong + "{\"id\":\"" + id + "\"}"
+
+		res, err := http.Get(link)
 		if err != nil {
-			return nil, err
+			return listSong
+		}
+		defer res.Body.Close()
 
+		if err := json.NewDecoder(res.Body).Decode(&zingResponse); err != nil {
+			log.Println(err)
 		}
 
-		doc.Find(".fn-playlist-item").Each(func(i int, s *goquery.Selection) {
-			dataCode, _ := s.Attr("data-code")
+		song.Artist = zingResponse.Artist
+		song.Title = zingResponse.Title
+		song.StreamURL = zingResponse.Source.Url
 
-			linkDownload := linkDownloadSong + dataCode
-			response, _ := http.Get(linkDownload)
-			defer response.Body.Close()
-			buffer, _ := ioutil.ReadAll(response.Body)
-
-			parseString := string(buffer)
-
-			stringSource := strings.Split(parseString, "\"link\":\"")
-			_stringSource := strings.Split(stringSource[1], dataCode)
-			listStreamTmp := strings.Split(_stringSource[0], "\",\"size")
-
-			stringTitle := strings.Split(listStreamTmp[0], "/song/")
-			_Title := strings.Split(stringTitle[1], "/")
-
-			listStream = append(listStream, InitMp3+listStreamTmp[0]+"~"+_Title[0])
-
-		})
-		return listStream, nil
-
+		listSong = append(listSong, song)
 	}
-
-	return listStream, errors.New("Unable to dowload this link")
-
+	return listSong
 }

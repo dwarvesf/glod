@@ -11,5 +11,11 @@ package glod
 
 // Source is the main interface and it defines the main methods of the package
 type Source interface {
-	GetDirectLink(url string) ([]string, error)
+	GetDirectLink(url string) ([]Response, error)
+}
+
+type Response struct {
+	Artist    string
+	StreamURL string
+	Title     string
 }
