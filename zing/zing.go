@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"git.dwarvesf.com/glod"
 	"github.com/PuerkitoBio/goquery"
 )
 
@@ -24,12 +25,6 @@ const (
 type Zing struct {
 }
 
-type Response struct {
-	Artist    string
-	StreamURL string
-	Title     string
-}
-
 type ZingResponse struct {
 	Title  string `json:"title"`
 	Artist string `json:"artist"`
@@ -41,7 +36,7 @@ type ZingResponse struct {
 }
 
 // function that input is a link then return an slice of url that permantly download file and error(if it has)
-func (z *Zing) GetDirectLink(link string) ([]Response, error) {
+func (z *Zing) GetDirectLink(link string) ([]glod.Response, error) {
 	if link == "" {
 		return nil, errors.New("Empty Link")
 	}
@@ -83,10 +78,10 @@ func GetSongID(link string) string {
 }
 
 // GetSongs return list of song
-func GetSongs(listLink []string) []Response {
+func GetSongs(listLink []string) []glod.Response {
 
-	var listSong []Response
-	var song Response
+	var listSong []glod.Response
+	var song glod.Response
 	var zingResponse ZingResponse
 
 	for i, _ := range listLink {

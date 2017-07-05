@@ -1,5 +1,9 @@
 package chiasenhac
 
+import (
+	"git.dwarvesf.com/glod"
+)
+
 const (
 	CsnPrefix         = "chiasenhac"
 	csnDownloadSuffix = "download.html"
@@ -13,14 +17,8 @@ const (
 type ChiaSeNhac struct {
 }
 
-type Response struct {
-	Artist    string
-	StreamURL string
-	Title     string
-}
-
 // TODO: test chiesenhac
-func (csn *ChiaSeNhac) GetDirectLink(link string) ([]Response, error) {
-	var listSong []Response
+func (csn *ChiaSeNhac) GetDirectLink(link string) ([]glod.Response, error) {
+	var listSong []glod.Response
 	return listSong, nil
 }

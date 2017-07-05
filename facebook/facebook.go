@@ -1,16 +1,14 @@
 package facebook
 
-type Response struct {
-	Artist    string
-	StreamURL string
-	Title     string
-}
+import (
+	"git.dwarvesf.com/glod"
+)
 
 type Facebook struct {
 }
 
 // TODO : code facebook
-func (fb *Facebook) GetDirectLink(link string) ([]Response, error) {
-	var listSong []Response
+func (fb *Facebook) GetDirectLink(link string) ([]glod.Response, error) {
+	var listSong []glod.Response
 	return listSong, nil
 }

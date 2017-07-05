@@ -1,12 +1,7 @@
 package nhaccuatui
 
 type NhacCuaTui struct {
-}
-
-type Response struct {
-	Artist    string
-	StreamURL string
-	Title     string
+	"git.dwarvesf.com/glod"
 }
 
 const (
@@ -19,7 +14,7 @@ const (
 
 // TODO: code nhaccuatui
 // function that input is a link then return an slice of url that permantly download file and error(if it has)
-func (nct *NhacCuaTui) GetDirectLink(link string) ([]Response, error) {
-	var listSong []Response
+func (nct *NhacCuaTui) GetDirectLink(link string) ([]glod.Response, error) {
+	var listSong []glod.Response
 	return listSong, nil
 }
