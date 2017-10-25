@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/dwarvesf/glod"
-	"github.com/goquery"
 )
 
 // YoutubePrefix ...
